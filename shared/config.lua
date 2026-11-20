@@ -6,6 +6,34 @@ Config.Inventory = 'auto'
 Config.Open = {
     command = 'contracts',
     key = 'F7',
+    boardOnly = false,
+}
+
+Config.Boards = {
+    interactDistance = 2.0,
+    drawDistance = 20.0,
+    marker = true,
+    blip = { enabled = true, sprite = 408, color = 5, scale = 0.8 },
+    points = {
+        { coords = vector3(195.17, -933.77, 30.69) },
+    },
+}
+
+Config.Arrival = {
+    enabled = true,
+    radius = 30.0,
+    notifyPoster = true,
+}
+
+Config.HelpMenu = {
+    enabled = true,
+    position = 'bottom-right',
+    offset = nil,
+    features = {
+        arrival = true,
+        board = true,
+    },
+    arrivalDuration = 8000,
 }
 
 Config.Categories = {
