@@ -8,6 +8,19 @@ local function proxy(name, event, transform)
     end)
 end
 
+local function withPlace(paper)
+    local location = type(paper) == 'table' and paper.location
+    if location and location.x and location.y then
+        local z = location.z or 0.0
+        local street = GetStreetNameAtCoord(location.x + 0.0, location.y + 0.0, z + 0.0)
+        paper.place = {
+            street = GetStreetNameFromHashKey(street),
+            zone = GetLabelText(GetNameOfZone(location.x + 0.0, location.y + 0.0, z + 0.0)),
+        }
+    end
+    return paper
+end
+
 local function currentLocation()
     local coords = GetEntityCoords(PlayerPedId())
     return { x = coords.x, y = coords.y, z = coords.z }
@@ -25,6 +38,16 @@ function SX.Contracts:Initialize()
     proxy('abandonContract', 'sxContracts:abandon', function(data) return { data and data.id } end)
     proxy('completeContract', 'sxContracts:complete', function(data) return { data and data.id } end)
     proxy('cancelContract', 'sxContracts:cancel', function(data) return { data and data.id, data and data.admin == true } end)
+
+    RegisterNUICallback('getPaper', function(data, cb)
+        local result = TriggerServerCallback('sxContracts:getPaper', data and data.id) or { ok = false, error = 'timeout' }
+        if result.ok then withPlace(result.data) end
+        cb(result)
+    end)
+
+    RegisterNetEvent('sxContracts:openPaper', function(paper)
+        SX.UI:OpenPaper(withPlace(paper))
+    end)
 
     RegisterNUICallback('setWaypoint', function(data, cb)
         if data and tonumber(data.x) and tonumber(data.y) then
