@@ -1,0 +1,45 @@
+fx_version 'cerulean'
+game 'gta5'
+
+name 'sxContracts'
+description 'Contract board between players: post a paid job, take it, get paid when the poster validates it, ESX or standalone'
+author '0xS4cha'
+version '0.1.0'
+repository 'https://github.com/0xS4cha/sxContracts'
+
+lua54 'yes'
+
+dependency 'oxmysql'
+
+shared_scripts {
+    'core/sh_logger.lua',
+    'core/sh_translation.lua',
+    'translations/*.lua',
+    'core/sh_modules.lua',
+    'core/sh_class.lua',
+    'core/sh_callback.lua',
+    'core/sh_generate.lua',
+    'core/sh_utils.lua',
+    'shared/config.lua',
+    'modules/**/sh_*.lua',
+}
+
+client_scripts {
+    'bridge/cl_bridge.lua',
+    'modules/**/cl_*.lua',
+    'core/sh_init.lua',
+}
+
+server_scripts {
+    '@oxmysql/lib/MySQL.lua',
+    'bridge/sv_bridge.lua',
+    'modules/**/sv_*.lua',
+    'core/sh_init.lua',
+}
+
+ui_page 'web/dist/index.html'
+
+files {
+    'web/dist/index.html',
+    'web/dist/**/*',
+}

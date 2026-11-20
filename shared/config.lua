@@ -1,0 +1,35 @@
+Config = {}
+
+Config.Framework = 'auto'
+Config.Inventory = 'auto'
+
+Config.Open = {
+    command = 'contracts',
+    key = 'F7',
+}
+
+Config.Categories = {
+    { id = 'delivery', icon = 'package' },
+    { id = 'transport', icon = 'car' },
+    { id = 'escort', icon = 'shield' },
+    { id = 'recovery', icon = 'key-round' },
+    { id = 'protection', icon = 'swords' },
+    { id = 'other', icon = 'clipboard-list' },
+}
+
+Config.Contracts = {
+    minReward = 100,
+    maxReward = 500000,
+    fee = 0.05,
+    titleLength = { min = 4, max = 60 },
+    descriptionLength = { max = 600 },
+    durationHours = { 2, 6, 24, 72 },
+    maxPostedPerPlayer = 5,
+    maxTakenPerPlayer = 2,
+    expireInterval = 60,
+}
+
+Config.Admin = {
+    groups = { 'admin', 'superadmin' },
+    ace = 'sxcontracts.admin',
+}
