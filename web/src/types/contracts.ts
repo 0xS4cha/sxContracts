@@ -57,3 +57,25 @@ export interface CreateContractPayload {
 }
 
 export type BoardCategory = 'board' | 'posted' | 'taken'
+
+export interface ContractPaper {
+  id: number
+  title: string
+  description: string
+  category: string
+  reward: number
+  status: ContractStatus
+  poster: string
+  contractor?: string | null
+  location?: { x: number; y: number; z: number } | null
+  place?: { street: string; zone: string } | null
+  createdAt: number
+  expiresAt: number
+  takenAt?: number | null
+  closedAt?: number | null
+}
+
+export interface ShowPaperData {
+  paper: ContractPaper
+  standalone: boolean
+}

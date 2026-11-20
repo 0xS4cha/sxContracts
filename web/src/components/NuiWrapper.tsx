@@ -5,15 +5,16 @@ import { fetchNui } from '../utils/fetchNui'
 
 interface NuiWrapperProps {
   visible: boolean
+  escape?: boolean
   children: ReactNode
 }
 
-export function NuiWrapper({ visible, children }: NuiWrapperProps) {
+export function NuiWrapper({ visible, escape = true, children }: NuiWrapperProps) {
   const handleClose = () => {
     void fetchNui('close')
   }
 
-  useEscapeKey(handleClose, visible)
+  useEscapeKey(handleClose, visible && escape)
 
   return (
     <AnimatePresence>
