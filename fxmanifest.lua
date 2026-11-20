@@ -4,7 +4,7 @@ game 'gta5'
 name 'sxContracts'
 description 'Contract board between players: post a paid job, take it, get paid when the poster validates it, ESX or standalone'
 author '0xS4cha'
-version '0.1.0'
+version '1.0.0'
 repository 'https://github.com/0xS4cha/sxContracts'
 
 lua54 'yes'
