@@ -57,12 +57,14 @@ function SX.Contracts:Initialize()
         cb({ ok = true })
     end)
 
-    RegisterCommand(Config.Open.command, function()
-        SX.UI:Open()
-    end, false)
+    if not Config.Open.boardOnly then
+        RegisterCommand(Config.Open.command, function()
+            SX.UI:Open()
+        end, false)
 
-    if Config.Open.key and Config.Open.key ~= '' then
-        RegisterKeyMapping(Config.Open.command, GetPhrase('keymap_open'), 'keyboard', Config.Open.key)
+        if Config.Open.key and Config.Open.key ~= '' then
+            RegisterKeyMapping(Config.Open.command, GetPhrase('keymap_open'), 'keyboard', Config.Open.key)
+        end
     end
 
     TriggerServerEvent('sxContracts:ready')

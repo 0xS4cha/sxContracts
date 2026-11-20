@@ -127,4 +127,21 @@ AddLanguage("fr", {
     stamp_done = "Payé",
     stamp_cancelled = "Annulé",
     stamp_expired = "Expiré",
+
+    notify_arrived = "~b~%s~s~ est arrivé sur le lieu de votre contrat ~y~%s~s~.",
+    notify_arrival = "Vous êtes arrivé sur le lieu du contrat ~y~%s~s~.",
+    arrival_subtitle = "Contrat n°%s",
+    arrival_watermark = "ARRIVÉ",
+    arrival_client = "Client",
+    arrival_reward = "Récompense",
+    arrival_next = "Étape suivante",
+    arrival_next_value = "Réaliser la mission",
+    arrival_footer = "Vous êtes arrivé",
+
+    board_title = "Tableau des contrats",
+    board_watermark = "TABLEAU",
+    board_open = "Contrats ouverts",
+    board_read = "Lire le tableau",
+    board_help = "Appuyez sur ~INPUT_CONTEXT~ pour lire le ~b~tableau des contrats~s~.",
+    error_too_far = "Allez à un tableau des contrats pour faire ça.",
 })

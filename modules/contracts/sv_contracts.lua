@@ -49,6 +49,54 @@ local function notifyIdentifier(identifier, message)
     if target then Bridge.Notify(target, message) end
 end
 
+local arrived = {}
+
+local function nearBoard(source)
+    if not Config.Open.boardOnly or Bridge.IsAdmin(source) then return true end
+    local coords = GetEntityCoords(GetPlayerPed(source))
+    for _, point in ipairs(Config.Boards.points) do
+        if #(coords - point.coords) <= Config.Boards.interactDistance + 3.0 then return true end
+    end
+    return false
+end
+
+function SX.Contracts:GetJobs(identifier)
+    local rows = MySQL.query.await('SELECT * FROM sx_contracts WHERE contractor = ? AND status = ?', { identifier, STATUS.TAKEN }) or {}
+    local jobs = {}
+    for i, row in ipairs(rows) do
+        jobs[i] = {
+            id = row.id,
+            title = row.title,
+            poster = row.poster_name,
+            reward = row.reward,
+            location = decodeLocation(row.location),
+            expiresAt = row.expires_at,
+        }
+    end
+    return jobs
+end
+
+function SX.Contracts:PushJobs(identifier)
+    local target = identifier and Bridge.GetSourceFromIdentifier(identifier)
+    if target then TriggerClientEvent('sxContracts:jobsChanged', target, self:GetJobs(identifier)) end
+end
+
+function SX.Contracts:Arrived(source, id)
+    if not Config.Arrival.enabled or arrived[id] then return end
+    local row = getRow(id)
+    local location = row and decodeLocation(row.location)
+    if not row or row.status ~= STATUS.TAKEN or row.contractor ~= Bridge.GetIdentifier(source) or not location then return end
+
+    local coords = GetEntityCoords(GetPlayerPed(source))
+    if #(coords - vector3(location.x, location.y, location.z or coords.z)) > Config.Arrival.radius * 1.5 then return end
+
+    arrived[id] = true
+    if Config.Arrival.notifyPoster then
+        notifyIdentifier(row.poster, GetPhrase('notify_arrived', row.contractor_name, row.title))
+    end
+    TriggerEvent('sxContracts:arrived', id, source)
+end
+
 function SX.Contracts:ToPaper(row)
     return {
         id = row.id,
@@ -187,6 +235,7 @@ end
 
 function SX.Contracts:Create(source, data)
     if type(data) ~= 'table' then return fail('invalid') end
+    if not nearBoard(source) then return fail('too_far') end
     local identifier = Bridge.GetIdentifier(source)
     local settings = Config.Contracts
 
@@ -243,6 +292,7 @@ function SX.Contracts:Accept(source, id)
     local row = getRow(id)
     if not row or row.status ~= STATUS.OPEN or row.expires_at <= now() then return fail('not_available') end
     if row.poster == identifier then return fail('own_contract') end
+    if not nearBoard(source) then return fail('too_far') end
 
     local taken = countRows('contractor = ? AND status = ?', { identifier, STATUS.TAKEN })
     if taken >= Config.Contracts.maxTakenPerPlayer then return fail('too_many_taken') end
@@ -255,6 +305,7 @@ function SX.Contracts:Accept(source, id)
     if Config.Paper.giveContractor then
         self:GivePaper(source, getRow(id) or row)
     end
+    self:PushJobs(identifier)
     notifyIdentifier(row.poster, GetPhrase('notify_taken', row.title, Bridge.GetName(source)))
     TriggerEvent('sxContracts:accepted', id, source)
     return { ok = true }
@@ -270,6 +321,8 @@ function SX.Contracts:Abandon(source, id)
 
     local row = getRow(id)
     if row then notifyIdentifier(row.poster, GetPhrase('notify_abandoned', row.title)) end
+    arrived[id] = nil
+    self:PushJobs(identifier)
     TriggerEvent('sxContracts:abandoned', id, source)
     return { ok = true }
 end
@@ -280,6 +333,8 @@ function SX.Contracts:Complete(source, id)
     if not row or row.status ~= STATUS.TAKEN or row.poster ~= identifier then return fail('not_allowed') end
 
     payout(row, row.contractor, row.reward, STATUS.DONE)
+    arrived[id] = nil
+    self:PushJobs(row.contractor)
     notifyIdentifier(row.contractor, GetPhrase('notify_completed', row.title))
     TriggerEvent('sxContracts:completed', id, row.contractor, row.reward)
     return { ok = true }
@@ -298,7 +353,11 @@ function SX.Contracts:Cancel(source, id, asAdmin)
     end
 
     payout(row, row.poster, row.reward, STATUS.CANCELLED)
-    if row.contractor then notifyIdentifier(row.contractor, GetPhrase('notify_cancelled', row.title)) end
+    if row.contractor then
+        notifyIdentifier(row.contractor, GetPhrase('notify_cancelled', row.title))
+        self:PushJobs(row.contractor)
+    end
+    arrived[id] = nil
     TriggerEvent('sxContracts:cancelled', id, source)
     return { ok = true }
 end
@@ -313,7 +372,17 @@ function SX.Contracts:Expire()
 end
 
 function SX.Contracts:Initialize()
+    RegisterServerCallback('sxContracts:getJobs', function(source)
+        return SX.Contracts:GetJobs(Bridge.GetIdentifier(source))
+    end)
+    RegisterServerCallback('sxContracts:getSummary', function()
+        return { open = countRows('status = ? AND expires_at > ?', { STATUS.OPEN, now() }) }
+    end)
+    RegisterNetEvent('sxContracts:reportArrival', function(id)
+        SX.Contracts:Arrived(source, tonumber(id))
+    end)
     RegisterServerCallback('sxContracts:getBoard', function(source)
+        if not nearBoard(source) then return fail('too_far') end
         SX.Contracts:Settle(source)
         return SX.Contracts:GetBoard(source)
     end)
