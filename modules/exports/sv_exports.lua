@@ -23,6 +23,11 @@ exports('GetOpenContracts', function()
     return result
 end)
 
+exports('useContract', function(event, _, inventory, slot)
+    if event ~= 'usingItem' then return end
+    SX.Contracts:UsePaper(inventory.id, Bridge.GetSlotMetadata(inventory.id, slot))
+end)
+
 exports('OpenBoard', function(source)
     TriggerClientEvent('sxContracts:open', source)
 end)

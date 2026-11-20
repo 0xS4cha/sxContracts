@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { MOCK_BOARD } from '../data/mockBoard'
-import type { BoardData, CreateContractPayload } from '../types/contracts'
+import type { BoardData, Contract, ContractPaper, CreateContractPayload } from '../types/contracts'
 import { fetchNui } from '../utils/fetchNui'
 import { isEnvBrowser } from '../utils/nui'
 
@@ -65,5 +65,21 @@ export function useBoard(visible: boolean) {
     complete: (id: number) => run('completeContract', { id }),
     cancel: (id: number, admin = false) => run('cancelContract', { id, admin }),
     setWaypoint: (location: { x: number; y: number }) => void fetchNui('setWaypoint', location),
+    getPaper: async (contract: Contract): Promise<ContractPaper | null> => {
+      if (isEnvBrowser()) {
+        return {
+          ...contract,
+          poster: contract.poster.name,
+          contractor: contract.contractor?.name ?? null,
+          place: contract.location ? { street: 'Route 68', zone: 'Sandy Shores' } : null,
+        }
+      }
+      try {
+        return await fetchNui<ContractPaper>('getPaper', { id: contract.id })
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'unknown')
+        return null
+      }
+    },
   }
 }

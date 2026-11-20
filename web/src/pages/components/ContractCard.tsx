@@ -1,4 +1,4 @@
-import { Check, ClipboardList, Hand, LogOut, MapPin, Navigation, ShieldAlert, Timer, UserRound, X } from 'lucide-react'
+import { Check, ClipboardList, FileText, Hand, LogOut, MapPin, Navigation, ShieldAlert, Timer, UserRound, X } from 'lucide-react'
 import { Button, Panel, Row, Tag, type Tone } from '../../components/ui'
 import { useConfirm } from '../../hooks/useConfirm'
 import { useTranslation } from '../../hooks/useTranslation'
@@ -28,6 +28,7 @@ interface ContractCardProps {
   onComplete: (id: number) => void
   onCancel: (id: number, admin?: boolean) => void
   onWaypoint: (location: { x: number; y: number }) => void
+  onPaper: (contract: Contract) => void
 }
 
 export function ContractCard({
@@ -42,6 +43,7 @@ export function ContractCard({
   onComplete,
   onCancel,
   onWaypoint,
+  onPaper,
 }: ContractCardProps) {
   const { t, locale } = useTranslation()
   const confirm = useConfirm<string>()
@@ -97,16 +99,20 @@ export function ContractCard({
         subtitle: `#${contract.id} · ${t(`category_${contract.category}`)} · ${t('contract_by', { name: contract.poster.name })}`,
         title: contract.title,
         icon,
-        actions:
-          view === 'board' ? (
-            <Tag tone={remaining < 3600 ? 'warning' : 'neutral'} icon={Timer}>
-              {formatDuration(remaining)}
-            </Tag>
-          ) : (
-            <Tag tone={STATUS_TONE[contract.status]} solid={contract.status === 'taken'}>
-              {t(`status_${contract.status}`)}
-            </Tag>
-          ),
+        actions: (
+          <>
+            {view === 'board' ? (
+              <Tag tone={remaining < 3600 ? 'warning' : 'neutral'} icon={Timer}>
+                {formatDuration(remaining)}
+              </Tag>
+            ) : (
+              <Tag tone={STATUS_TONE[contract.status]} solid={contract.status === 'taken'}>
+                {t(`status_${contract.status}`)}
+              </Tag>
+            )}
+            <Button size="sm" icon={FileText} onClick={() => onPaper(contract)} title={t('btn_paper')} />
+          </>
+        ),
       }}
       footer={{
         label: <span className="text-[24px] text-help-safe">{formatMoney(contract.reward, locale)}</span>,

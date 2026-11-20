@@ -4,13 +4,13 @@ import { AlertCircle, Briefcase, ClipboardList, ClipboardPlus, FileSignature, In
 import { Button, IconBadge, PageHeader, Panel, SearchField, Sidebar, Tabs, type SidebarItem } from '../components/ui'
 import { useTranslation } from '../hooks/useTranslation'
 import { useBoard } from '../hooks/useBoard'
-import type { BoardCategory, Contract } from '../types/contracts'
+import type { BoardCategory, Contract, ContractPaper } from '../types/contracts'
 import { fetchNui } from '../utils/fetchNui'
 import { formatMoney } from '../utils/format'
 import { ContractCard, type CardView } from './components/ContractCard'
 import { CreateContractModal } from './components/CreateContractModal'
 
-export function Board({ visible }: { visible: boolean }) {
+export function Board({ visible, onPaper }: { visible: boolean; onPaper: (paper: ContractPaper) => void }) {
   const { t, locale } = useTranslation()
   const [category, setCategory] = useState<BoardCategory>('board')
   const [collapsed, setCollapsed] = useState(false)
@@ -158,6 +158,9 @@ export function Board({ visible }: { visible: boolean }) {
                       onComplete={(id) => void board.complete(id)}
                       onCancel={(id, admin) => void board.cancel(id, admin)}
                       onWaypoint={board.setWaypoint}
+                      onPaper={(contract) => {
+                        void board.getPaper(contract).then((paper) => paper && onPaper(paper))
+                      }}
                     />
                   ))}
                 </div>

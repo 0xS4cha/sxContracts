@@ -7,6 +7,7 @@ A contract board for **ESX or standalone** FiveM servers. Players post paid jobs
 - **Board**: every open contract with its category, reward, time left and location, filtered by category and searchable.
 - **Escrow**: the reward and a board fee are taken when the contract is posted. The contractor is paid when the poster validates, the poster is refunded when the contract is cancelled or expires.
 - **Offline safe**: a payment due to an offline player is kept and paid when they come back or open the board.
+- **Paper contract**: with ox_inventory, the poster and the contractor get a unique `sx_contract` item (metadata with the contract id). Using it shows the contract as a typed paper with signatures and a status stamp, and anyone holding it can read it, for example to show it to the police. The same paper opens from the panel.
 - **Jobs**: take a contract, set a GPS waypoint on its location, abandon it to put it back on the board.
 - **Limits**: reward range, fee, visibility durations, active contracts per poster and jobs per contractor.
 - **Admin**: admins can remove any open or running contract, the poster is refunded.
@@ -43,6 +44,22 @@ Without ESX nor ox_inventory, rewards are shown but no money moves.
    ensure sxContracts
    ```
 
+5. With ox_inventory, add the paper item to `ox_inventory/data/items.lua`. `stack = false` keeps every copy unique and `consume = 0` keeps the paper after reading it:
+
+   ```lua
+   ['sx_contract'] = {
+       label = 'Contract',
+       weight = 10,
+       stack = false,
+       close = true,
+       consume = 0,
+       description = 'A contract from the board',
+       server = { export = 'sxContracts.useContract' },
+   },
+   ```
+
+   The item name can be changed with `Config.Paper.item`. Without ox_inventory there is no item, the paper is still shown from the panel.
+
 ## Usage
 
 | Command / key | Description |
@@ -68,6 +85,9 @@ All values live in `shared/config.lua`.
 | `Config.Contracts.maxPostedPerPlayer` | Open or running contracts per poster |
 | `Config.Contracts.maxTakenPerPlayer` | Running jobs per contractor |
 | `Config.Contracts.expireInterval` | Seconds between two checks of the expired contracts |
+| `Config.Paper.enabled` | Gives the paper item, needs ox_inventory |
+| `Config.Paper.item` | Name of the paper item |
+| `Config.Paper.givePoster` / `giveContractor` | Who gets a copy, when posting and when taking the contract |
 | `Config.Admin` | ESX groups and ACE permission (`sxcontracts.admin`) allowed to remove contracts |
 
 ## How it works
@@ -83,6 +103,7 @@ A contract goes through `open` → `taken` → `done`, or ends `cancelled` (by i
 | `GetContract(id)` | Returns a contract or `nil` |
 | `GetOpenContracts()` | Returns the open contracts |
 | `OpenBoard(source)` | Opens the board for a player |
+| `useContract` | Item export for ox_inventory, opens the paper of the used copy |
 
 ### Client
 

@@ -2,26 +2,42 @@ SX.UI = {}
 SX.Modules:Register('UI', 5)
 
 local isOpen = false
+local mode = nil
 
 function SX.UI:Send(action, data)
     SendNUIMessage({ action = action, data = data or {} })
 end
 
-function SX.UI:Open()
-    if isOpen then return end
-
+local function focus()
     local locale = GetPreferredLanguageId()
-    isOpen = true
     SetNuiFocus(true, true)
-    self:Send('setTranslations', { locale = locale, translations = GetLanguageTable(locale) })
-    self:Send('setLocale', { locale = locale })
+    SX.UI:Send('setTranslations', { locale = locale, translations = GetLanguageTable(locale) })
+    SX.UI:Send('setLocale', { locale = locale })
+end
+
+function SX.UI:Open()
+    if isOpen and mode == 'board' then return end
+    if not isOpen then focus() end
+    isOpen, mode = true, 'board'
+    self:Send('hidePaper')
     self:Send('setVisible', { visible = true })
+end
+
+function SX.UI:OpenPaper(paper)
+    if isOpen and mode == 'board' then
+        self:Send('showPaper', { paper = paper, standalone = false })
+        return
+    end
+    if not isOpen then focus() end
+    isOpen, mode = true, 'paper'
+    self:Send('showPaper', { paper = paper, standalone = true })
 end
 
 function SX.UI:Close()
     if not isOpen then return end
-    isOpen = false
+    isOpen, mode = false, nil
     SetNuiFocus(false, false)
+    self:Send('hidePaper')
     self:Send('setVisible', { visible = false })
 end
 
