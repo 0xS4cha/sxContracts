@@ -29,6 +29,13 @@ Config.Contracts = {
     expireInterval = 60,
 }
 
+Config.Paper = {
+    enabled = true,
+    item = 'sx_contract',
+    givePoster = true,
+    giveContractor = true,
+}
+
 Config.Admin = {
     groups = { 'admin', 'superadmin' },
     ace = 'sxcontracts.admin',

@@ -117,6 +117,28 @@ function Bridge.AddMoney(source, amount)
     return false
 end
 
+function Bridge.HasMetadataItems()
+    return Bridge.Inventory == 'ox_inventory'
+end
+
+function Bridge.GiveItemWithMetadata(source, item, metadata)
+    if not Bridge.HasMetadataItems() then return false end
+    if not exports.ox_inventory:CanCarryItem(source, item, 1, metadata) then return false end
+    local ok = exports.ox_inventory:AddItem(source, item, 1, metadata)
+    return ok and true or false
+end
+
+function Bridge.CountItemWithMetadata(source, item, metadata)
+    if not Bridge.HasMetadataItems() then return 0 end
+    return exports.ox_inventory:GetItemCount(source, item, metadata) or 0
+end
+
+function Bridge.GetSlotMetadata(inventory, slot)
+    if not Bridge.HasMetadataItems() then return nil end
+    local data = exports.ox_inventory:GetSlot(inventory, slot)
+    return data and data.metadata or nil
+end
+
 function Bridge.Notify(source, message, kind)
     TriggerClientEvent('sxContracts:notify', source, message, kind or 'info')
 end

@@ -49,6 +49,60 @@ local function notifyIdentifier(identifier, message)
     if target then Bridge.Notify(target, message) end
 end
 
+function SX.Contracts:ToPaper(row)
+    return {
+        id = row.id,
+        title = row.title,
+        description = row.description or '',
+        category = row.category,
+        reward = row.reward,
+        status = row.status,
+        poster = row.poster_name,
+        contractor = row.contractor_name,
+        location = decodeLocation(row.location),
+        createdAt = row.created_at,
+        expiresAt = row.expires_at,
+        takenAt = row.taken_at,
+        closedAt = row.closed_at,
+    }
+end
+
+function SX.Contracts:GivePaper(source, row)
+    if not Config.Paper.enabled or not Bridge.HasMetadataItems() then return end
+    local given = Bridge.GiveItemWithMetadata(source, Config.Paper.item, {
+        contractId = row.id,
+        label = GetPhrase('paper_item_label', row.id),
+        description = row.title,
+    })
+    if not given then
+        Bridge.Notify(source, GetPhrase('notify_paper_full'), 'error')
+    end
+end
+
+function SX.Contracts:CanReadPaper(source, row)
+    local identifier = Bridge.GetIdentifier(source)
+    if row.poster == identifier or row.contractor == identifier then return true end
+    if row.status == STATUS.OPEN and row.expires_at > now() then return true end
+    if Bridge.IsAdmin(source) then return true end
+    return Bridge.CountItemWithMetadata(source, Config.Paper.item, { contractId = row.id }) > 0
+end
+
+function SX.Contracts:GetPaper(source, id)
+    local row = getRow(id)
+    if not row or not self:CanReadPaper(source, row) then return fail('not_allowed') end
+    return { ok = true, data = self:ToPaper(row) }
+end
+
+function SX.Contracts:UsePaper(source, metadata)
+    local id = metadata and tonumber(metadata.contractId)
+    local row = id and getRow(id)
+    if not row then
+        Bridge.Notify(source, GetPhrase('notify_paper_unknown'), 'error')
+        return
+    end
+    TriggerClientEvent('sxContracts:openPaper', source, self:ToPaper(row))
+end
+
 function SX.Contracts:Settle(source)
     if not Bridge.HasMoneySystem() then return 0 end
     local identifier = Bridge.GetIdentifier(source)
@@ -176,6 +230,10 @@ function SX.Contracts:Create(source, data)
     ]], { title, description, data.category, reward, fee, STATUS.OPEN, identifier, Bridge.GetName(source), location, created, created + hours * 3600 })
 
     Logger:info('CONTRACTS', ('Contract #%s created by %s for %s'):format(id, identifier, reward))
+    if Config.Paper.givePoster then
+        local row = getRow(id)
+        if row then self:GivePaper(source, row) end
+    end
     TriggerEvent('sxContracts:created', id, source)
     return { ok = true, data = { id = id } }
 end
@@ -194,6 +252,9 @@ function SX.Contracts:Accept(source, id)
     ]], { STATUS.TAKEN, identifier, Bridge.GetName(source), now(), id, STATUS.OPEN })
     if updated ~= 1 then return fail('not_available') end
 
+    if Config.Paper.giveContractor then
+        self:GivePaper(source, getRow(id) or row)
+    end
     notifyIdentifier(row.poster, GetPhrase('notify_taken', row.title, Bridge.GetName(source)))
     TriggerEvent('sxContracts:accepted', id, source)
     return { ok = true }
@@ -256,6 +317,7 @@ function SX.Contracts:Initialize()
         SX.Contracts:Settle(source)
         return SX.Contracts:GetBoard(source)
     end)
+    RegisterServerCallback('sxContracts:getPaper', function(source, id) return SX.Contracts:GetPaper(source, tonumber(id)) end)
     RegisterServerCallback('sxContracts:create', function(source, data) return SX.Contracts:Create(source, data) end)
     RegisterServerCallback('sxContracts:accept', function(source, id) return SX.Contracts:Accept(source, tonumber(id)) end)
     RegisterServerCallback('sxContracts:abandon', function(source, id) return SX.Contracts:Abandon(source, tonumber(id)) end)
