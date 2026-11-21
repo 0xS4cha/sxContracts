@@ -18,6 +18,14 @@ A contract board for **ESX or standalone** FiveM servers. Players post paid jobs
 - **Translations**: English and French.
 - **Exports and events** to plug other resources (for example sxIllegals influence on completed jobs).
 
+<div align="center">
+
+![sxContracts](previews/image2.png)
+![sxContracts](previews/image.png)
+
+</div>
+
+
 ## Dependencies
 
 | Resource | Purpose |
